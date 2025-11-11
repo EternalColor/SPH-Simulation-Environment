@@ -16,25 +16,30 @@ The SPH-Algorithm was optimized with a spatial grid. This allowed the time compl
 
 **Change fluid parameters**
 
-<video src="https://github.com/user-attachments/assets/1f9fa20d-c7af-47cd-bb24-955c2fe8cfb4" controls muted autoplay loop style="width:50%" />
-<video src="https://github.com/user-attachments/assets/13218442-84d3-402d-a348-1b24eb7413c5" controls muted autoplay loop style="width:50%" />
+<video src="https://github.com/user-attachments/assets/1f9fa20d-c7af-47cd-bb24-955c2fe8cfb4" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/13218442-84d3-402d-a348-1b24eb7413c5" autoplay loop muted playsinline></video>
 
 **Change external forces**
 
-[Gravity.webm](https://github.com/user-attachments/assets/d9203042-016b-4490-8eb8-1813716d998b) [GravityParticles.webm](https://github.com/user-attachments/assets/106526f6-d62d-455b-a5ac-98a2ef2cc002)
+<video src="https://github.com/user-attachments/assets/d9203042-016b-4490-8eb8-1813716d998b" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/106526f6-d62d-455b-a5ac-98a2ef2cc002" autoplay loop muted playsinline></video>
 
 **Choose from different fluid presets**
 
-[FluidPresetUIElement.mp4](https://github.com/user-attachments/assets/4c7439a8-c00b-4974-b10e-68fd42153b36) [FluidPresetParticlesForGithub.mp4](https://github.com/user-attachments/assets/62cdc44c-b938-4b1f-90ed-8780d48bcb59)
+<video src="https://github.com/user-attachments/assets/4c7439a8-c00b-4974-b10e-68fd42153b36" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/62cdc44c-b938-4b1f-90ed-8780d48bcb59" autoplay loop muted playsinline></video>
 
 **Add obstacles to the simulation**
 
-[ObstaclesUIElement.webm](https://github.com/user-attachments/assets/9ead80da-e47f-4871-a690-8d037d62af26)[ObstaclesParticles.webm](https://github.com/user-attachments/assets/7382509f-8c01-49c3-942b-64b34aad6957)
+<video src="https://github.com/user-attachments/assets/9ead80da-e47f-4871-a690-8d037d62af26" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/7382509f-8c01-49c3-942b-64b34aad6957" autoplay loop muted playsinline></video>
 
 **Control the simulation**
 
-[StartStopUIElement.webm](https://github.com/user-attachments/assets/f381ae61-9af1-46b1-9396-fbc5ce3a836b)[StartStopResetParticles.webm](https://github.com/user-attachments/assets/4c9ea617-df47-4c6f-8933-a985617f065f)
+<video src="https://github.com/user-attachments/assets/f381ae61-9af1-46b1-9396-fbc5ce3a836b" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/4c9ea617-df47-4c6f-8933-a985617f065f" autoplay loop muted playsinline></video>
 
 **Change fluid colors**
 
-[FarbeUIElement.webm](https://github.com/user-attachments/assets/f908e1e0-7d82-4c80-a2f9-d8a73f5a5c24) [FarbeParticles.webm](https://github.com/user-attachments/assets/74176662-8a7c-4e36-9d6b-f8132225ad99)
+<video src="https://github.com/user-attachments/assets/f908e1e0-7d82-4c80-a2f9-d8a73f5a5c24" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/74176662-8a7c-4e36-9d6b-f8132225ad99" autoplay loop muted playsinline></video>
