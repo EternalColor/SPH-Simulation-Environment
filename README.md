@@ -2,14 +2,11 @@
 
 ## Description
 
-<img width="1408" height="758" alt="image" src="https://github.com/user-attachments/assets/1d25af96-3bf7-45c1-9ac2-642f8cb6601a" />
-**Simulation of wave patterns in water inside a narrow container**
+<img width="1408" height="758" alt="Simulation of wave patterns in water inside a narrow container" src="https://github.com/user-attachments/assets/1d25af96-3bf7-45c1-9ac2-642f8cb6601a" />
 
 The main part of this work was the evaluation and implementation of a user interface that allows the various parameters of the simulation, such as viscosity, density, particle count, external forces (gravity and wind), obstacles, or color selection, to be controlled in real time. This allows users to observe the behavior of liquids in a wide variety of scenarios. In addition, presets for fluid types such as water, lava, honey, alcohol, and oil were created so that users can quickly switch between simulation scenarios. 
 
-<img width="1404" height="790" alt="image" src="https://github.com/user-attachments/assets/6b53968f-886b-4b6a-86f5-0db6a84a03af" />
-**Simulation of water reacting with wind and obstacles**
-
+<img width="1404" height="790" alt="Simulation of water reacting with wind and obstacles" src="https://github.com/user-attachments/assets/6b53968f-886b-4b6a-86f5-0db6a84a03af" />
 
 Reference simulation environments were analyzed in the evaluation of the UI. Based on this analysis, three different UI mockups were created. User surveys were conducted to select a template for my user interface from these three mockups. The user interface was implemented using the Unity UI Toolkit. Specialized UI elements were created for the external forces to make them as easy to configure as possible.
 
@@ -28,8 +25,6 @@ The SPH-Algorithm was optimized with a spatial grid. This allowed the time compl
 **Choose from different fluid presets**
 
 [FluidPresetUIElement.mp4](https://github.com/user-attachments/assets/4c7439a8-c00b-4974-b10e-68fd42153b36) [FluidPresetParticlesForGithub.mp4](https://github.com/user-attachments/assets/62cdc44c-b938-4b1f-90ed-8780d48bcb59)
-
-
 
 **Add obstacles to the simulation**
 
