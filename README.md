@@ -16,7 +16,8 @@ The SPH-Algorithm was optimized with a spatial grid. This allowed the time compl
 
 **Change fluid parameters**
 
-![FluidParametersUIElement]https://github.com/user-attachments/assets/1f9fa20d-c7af-47cd-bb24-955c2fe8cfb4 ![FluidParameterParticles]https://github.com/user-attachments/assets/13218442-84d3-402d-a348-1b24eb7413c5
+<video src="https://github.com/user-attachments/assets/1f9fa20d-c7af-47cd-bb24-955c2fe8cfb4" controls muted autoplay loop style="width:50%" />
+<video src="https://github.com/user-attachments/assets/13218442-84d3-402d-a348-1b24eb7413c5" controls muted autoplay loop style="width:50%" />
 
 **Change external forces**
 
