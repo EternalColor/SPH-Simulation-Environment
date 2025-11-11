@@ -26,7 +26,9 @@ The SPH-Algorithm was optimized with a spatial grid. This allowed the time compl
 
 **Choose from different fluid presets**
 
-[FluidPresetUIElement.mp4](https://github.com/user-attachments/assets/4c7439a8-c00b-4974-b10e-68fd42153b36)
+[FluidPresetUIElement.mp4](https://github.com/user-attachments/assets/4c7439a8-c00b-4974-b10e-68fd42153b36) [FluidPresetParticlesForGithub.mp4](https://github.com/user-attachments/assets/62cdc44c-b938-4b1f-90ed-8780d48bcb59)
+
+
 
 **Add obstacles to the simulation**
 
