@@ -1,0 +1,354 @@
+#pragma kernel Clear
+#pragma kernel Assign
+#pragma kernel DensityAndPressure
+#pragma kernel Forces
+#pragma kernel Integration
+#pragma target 5.0
+
+static const uint threadGroupSize = 64;
+
+struct Particle
+{
+    float pressure;
+    float density;
+    float3 currentForce;
+    float3 velocity;
+    float3 position;
+};
+
+struct Obstacle
+{
+    float3 center;     // For capsule: pointA
+    uint type;         // 0 = sphere, 1 = cube, 2 = capsule
+    float3 size;       // For capsule: pointB
+    float offset;      // For capsule: radius
+};
+
+RWStructuredBuffer<Particle> _particles;
+RWStructuredBuffer<uint> gridParticleCounts;
+RWStructuredBuffer<uint> gridParticleIndices;
+StructuredBuffer<Obstacle> _obstacles;
+uint obstacleCount;
+
+float particleMass;
+float viscosity;
+float gasConstant;
+float restDensity;
+float boundDamping;
+float radius;
+float radius2;
+float pi;
+
+uint particleLength;
+float timestep;
+float3 containerSize;
+
+float precomputedPoly6;
+float precomputedSpikyGradient;
+float precomputedViscosityLaplacian;
+
+float3 wind = float3(0, 0, 0);
+float3 gravity = float3(0, -9.81, 0);
+float cellSize;
+int3 gridSize;
+uint maxParticlesPerCell;
+uint numCells;
+
+float POLY6(float distance2)
+{
+    float diff = radius2 - distance2;
+    return precomputedPoly6 * diff * diff * diff;
+}
+
+float SPIKY_GRAD(float distance)
+{
+    float diff = radius - distance;
+    return precomputedSpikyGradient * diff * diff * diff;
+}
+
+float VISC_LAP(float distance)
+{
+    return precomputedViscosityLaplacian * (radius - distance);
+}
+
+void ResolveObstacleCollision(inout float3 position, inout float3 velocity)
+{
+    for (uint i = 0; i < obstacleCount; ++i)
+    {
+        Obstacle obs = _obstacles[i];
+
+        if (obs.type == 0) // Sphere
+        {
+            float3 toParticle = position - obs.center;
+            float dist = length(toParticle);
+            float minDist = obs.size.x + radius;
+
+            if (dist < minDist && dist > 0.0001)
+            {
+                float3 normal = toParticle / dist;
+                position += normal * (minDist - dist);
+
+                float dotVel = dot(velocity, normal);
+                if (dotVel < 0)
+                {
+                    velocity -= (1 + boundDamping) * dotVel * normal;
+                }
+            }
+        }
+        else if (obs.type == 1) // Cube
+        {
+            float3 minB = obs.center - obs.size - radius;
+            float3 maxB = obs.center + obs.size + radius;
+
+            if (all(position > minB) && all(position < maxB))
+            {
+                float3 distances = float3
+                (
+                    min(position.x - minB.x, maxB.x - position.x),
+                    min(position.y - minB.y, maxB.y - position.y),
+                    min(position.z - minB.z, maxB.z - position.z)
+                );
+
+                int axis = distances.x < distances.y ?
+                    (distances.x < distances.z ? 0 : 2) :
+                    (distances.y < distances.z ? 1 : 2);
+
+                float3 normal = float3(0, 0, 0);
+
+                if (axis == 0)
+                {
+                    normal.x = position.x < obs.center.x ? -1 : 1;
+                }
+                else if (axis == 1)
+                {
+                    normal.y = position.y < obs.center.y ? -1 : 1;
+                }
+                else
+                {
+                    normal.z = position.z < obs.center.z ? -1 : 1;
+                }
+
+
+                position += normal * distances[axis];
+
+                float dotVel = dot(velocity, normal);
+
+                if (dotVel < 0)
+                {
+                    velocity -= (1 + boundDamping) * dotVel * normal;
+                }
+            }
+        }
+        else if (obs.type == 2) // Capsule
+        {
+            float3 A = obs.center;
+            float3 B = obs.size;
+            float r = obs.offset + radius;
+
+            float3 AB = B - A;
+            float3 AP = position - A;
+            float t = saturate(dot(AP, AB) / dot(AB, AB));
+            float3 closest = A + t * AB;
+
+            float3 toParticle = position - closest;
+            float dist = length(toParticle);
+
+            if (dist < r && dist > 0.0001)
+            {
+                float3 normal = toParticle / dist;
+                position += normal * (r - dist);
+
+                float dotVel = dot(velocity, normal);
+
+                if (dotVel < 0)
+                {
+                    velocity -= (1.0 + boundDamping) * dotVel * normal;
+                }
+            }
+        }
+    }
+}
+
+
+[numthreads(threadGroupSize, 1, 1)]
+void Clear(uint id : SV_DispatchThreadID) {
+    if (id >= numCells)
+    { 
+        return;
+    }
+
+    gridParticleCounts[id] = 0;
+}
+
+[numthreads(threadGroupSize, 1, 1)]
+void Assign(uint id : SV_DispatchThreadID) {
+    if (id >= particleLength) 
+    {
+        return;
+    }
+
+    float3 pos = _particles[id].position;
+    int3 cell = (int3)floor(pos / cellSize);
+
+    if (any(cell < 0) || any(cell >= gridSize))
+    { 
+        return;
+    }
+
+    int cellIndex = cell.x + cell.y * gridSize.x + cell.z * gridSize.x * gridSize.y;
+
+    uint indexInCell;
+    InterlockedAdd(gridParticleCounts[cellIndex], 1, indexInCell);
+    if (indexInCell >= maxParticlesPerCell)
+    { 
+        return; 
+    }
+
+    gridParticleIndices[cellIndex * maxParticlesPerCell + indexInCell] = id;
+}
+
+
+[numthreads(threadGroupSize, 1, 1)]
+void DensityAndPressure(uint3 id : SV_DispatchThreadID)
+{
+    int3 ownCell = (int3)floor(_particles[id.x].position / cellSize);
+    _particles[id.x].density = particleMass * POLY6(0);
+
+    for (int dx = -1; dx <= 1; dx++) 
+    {
+        for (int dy = -1; dy <= 1; dy++) 
+        {
+            for (int dz = -1; dz <= 1; dz++) 
+            {
+                int3 neighborCell = ownCell + int3(dx, dy, dz);
+
+                if (any(neighborCell < 0) || any(neighborCell >= gridSize)) 
+                {
+                    continue;
+                }
+
+                int neighborIndex = neighborCell.x + neighborCell.y * gridSize.x + neighborCell.z * gridSize.x * gridSize.y;
+                int count = gridParticleCounts[neighborIndex];
+
+                for (int i = 0; i < count; i++) 
+                {
+                    uint pIndex = gridParticleIndices[neighborIndex * maxParticlesPerCell + i];
+                    if (pIndex == id.x)
+                    {
+                        continue; 
+                    }
+
+                    float3 otherPos = _particles[pIndex].position;
+                    float3 direction = otherPos - _particles[id.x].position;
+                    float distance2 = dot(direction, direction);
+
+                    if (distance2 < radius2 && distance2 > 0)
+                    {
+                        _particles[id.x].density += particleMass * POLY6(distance2);
+                    }
+                }
+            }
+        }
+    }
+
+    _particles[id.x].pressure = gasConstant * (_particles[id.x].density - restDensity);
+}
+
+[numthreads(threadGroupSize, 1, 1)]
+void Forces(uint3 id: SV_DISPATCHTHREADID)
+{
+    float3 pressureForce = float3(0, 0, 0);
+    float3 viscosityForce = float3(0, 0, 0);
+
+    int3 selfCell = (int3)floor(_particles[id.x].position / cellSize);
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+
+                int3 neighborCell = selfCell + int3(dx, dy, dz);
+                if (any(neighborCell < 0) || any(neighborCell >= gridSize))
+                { 
+                    continue;
+                }
+
+                int neighborIndex = neighborCell.x + neighborCell.y * gridSize.x + neighborCell.z * gridSize.x * gridSize.y;
+                int count = gridParticleCounts[neighborIndex];
+
+                for (int i = 0; i < count; i++) 
+                {
+                    uint j = gridParticleIndices[neighborIndex * maxParticlesPerCell + i];
+                    
+                    if (j == id.x) 
+                    {
+                        continue;
+                    }
+
+                    float3 direction = _particles[j].position - _particles[id.x].position;
+                    float distance = length(direction);
+
+                    if (distance < radius && distance > 0.0)
+                    {
+                        float3 gradient = normalize(direction) * SPIKY_GRAD(distance);
+                        pressureForce += -particleMass * (_particles[id.x].pressure + _particles[j].pressure) / (2.0 * _particles[j].density) * gradient;
+                        viscosityForce += viscosity * particleMass * (_particles[j].velocity - _particles[id.x].velocity) / _particles[j].density * VISC_LAP(distance);
+                    }
+                }
+            }
+        }
+    }
+    float3 gravityForce = gravity * particleMass;
+    float3 windForce = wind * particleMass;
+
+    _particles[id.x].currentForce = pressureForce + viscosityForce + gravityForce + windForce;
+}
+
+[numthreads(threadGroupSize,1,1)]
+void Integration(uint3 id: SV_DISPATCHTHREADID)
+{
+    if (id.x >= particleLength)
+        return;
+
+    _particles[id.x].velocity += timestep * _particles[id.x].currentForce / _particles[id.x].density;
+    _particles[id.x].position += timestep * _particles[id.x].velocity;
+
+    if (obstacleCount > 0)
+    {
+        ResolveObstacleCollision(_particles[id.x].position, _particles[id.x].velocity);
+    }
+
+    if (_particles[id.x].position.x - radius < 0.0f)
+    {
+        _particles[id.x].velocity.x *= boundDamping;
+        _particles[id.x].position.x = radius;
+    }
+
+    if (_particles[id.x].position.x + radius > containerSize.x)
+    {
+        _particles[id.x].velocity.x *= boundDamping;
+        _particles[id.x].position.x = containerSize.x - radius;
+    }
+
+    if (_particles[id.x].position.y - radius < 0.0f)
+    {
+        _particles[id.x].velocity.y *= boundDamping;
+        _particles[id.x].position.y = radius;
+    }
+
+    if (_particles[id.x].position.y + radius > containerSize.y)
+    {
+        _particles[id.x].velocity.y *= boundDamping;
+        _particles[id.x].position.y = containerSize.y - radius;
+    }
+
+    if (_particles[id.x].position.z - radius < 0)
+    {
+        _particles[id.x].velocity.z *= boundDamping;
+        _particles[id.x].position.z = radius;
+    }
+
+    if (_particles[id.x].position.z + radius > containerSize.z)
+    {
+        _particles[id.x].velocity.z *= boundDamping;
+        _particles[id.x].position.z = containerSize.z - radius;
+    }
+}
