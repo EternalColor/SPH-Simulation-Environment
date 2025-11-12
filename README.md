@@ -4,9 +4,7 @@
 
 The main part of this work was the evaluation and implementation of a user interface that allows the various parameters of the simulation, such as viscosity, density, particle count, external forces (gravity and wind), obstacles, or color selection, to be controlled in real time. This allows users to observe the behavior of liquids in a wide variety of scenarios. In addition, presets for fluid types such as water, lava, honey, alcohol, and oil were created so that users can quickly switch between simulation scenarios.
 
-Reference simulation environments were analyzed in the evaluation of the UI. Based on this analysis, three different UI mockups were created. User surveys were conducted to select a template for my user interface from these three mockups. The user interface was implemented using the Unity UI Toolkit. Specialized UI elements were created for the external forces to make them as easy to configure as possible.
-
-The SPH-Algorithm was optimized with a spatial grid. This allowed the time complexity to be optimized from O(n²) to O(n). Additional functionalities such as saving and loading the simulation configuration as JSON files, validation of user input, and free camera movement are also available. Unit and integration tests for the core functionalities were created to confirm the physically correct behavior of the simulation.
+The underlying SPH-Algorithm was optimized with a spatial grid. This allowed the time complexity to be optimized from O(n²) to O(n). Additional functionalities such as saving and loading the simulation configuration as JSON files, validation of user input, and free camera movement are also available. Unit and integration tests for the core functionalities were created to confirm the physically correct behavior of the simulation.
 
 ## Most Important Features
 
